@@ -10,6 +10,10 @@ Follow this pattern: `[project-name] brief description (Step N)`
 
 Example: `[claude-code-metrics] bootstrap script, main.tf provider/backend config, variables (Step 2)`
 
+## Python Commands
+
+Always use `python3` (never `python`) when running Python commands.
+
 ## Python Testing
 
 When asserting mock calls, prefer a single `assert_called_once_with(...)` (or `assert_called_with(...)`) with the full expected payload over multiple individual field assertions.
