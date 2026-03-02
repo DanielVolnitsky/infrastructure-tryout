@@ -30,7 +30,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus" },
-          "expr": "sum by (user_email) (increase(claude_code_cost_usage_USD_total[$__range]))",
+          "expr": "sum by (user_email) (claude_code_cost_usage_USD_total)",
           "legendFormat": "{{user_email}}",
           "instant": true,
           "refId": "A"
@@ -61,7 +61,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus" },
-          "expr": "topk(5, sum by (user_email) (increase(claude_code_cost_usage_USD_total[$__range])))",
+          "expr": "topk(5, sum by (user_email) (claude_code_cost_usage_USD_total))",
           "legendFormat": "{{user_email}}",
           "instant": true,
           "refId": "A"
@@ -92,7 +92,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus" },
-          "expr": "bottomk(5, sum by (user_email) (increase(claude_code_cost_usage_USD_total[$__range])))",
+          "expr": "bottomk(5, sum by (user_email) (claude_code_cost_usage_USD_total))",
           "legendFormat": "{{user_email}}",
           "instant": true,
           "refId": "A"
@@ -123,7 +123,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus" },
-          "expr": "sum by (user_email, model) (increase(claude_code_cost_usage_USD_total[24h]))",
+          "expr": "sum by (user_email, model) (claude_code_cost_usage_USD_total)",
           "legendFormat": "{{user_email}} / {{model}}",
           "refId": "A"
         }

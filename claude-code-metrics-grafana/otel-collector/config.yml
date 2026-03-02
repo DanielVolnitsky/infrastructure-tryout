@@ -3,10 +3,6 @@ receivers:
     protocols:
       http:
         endpoint: 0.0.0.0:4318
-
-processors:
-  deltatocumulative:
-
 exporters:
   prometheus:
     endpoint: 0.0.0.0:8889
@@ -20,5 +16,4 @@ service:
   pipelines:
     metrics:
       receivers: [otlp]
-      processors: [deltatocumulative]
       exporters: [prometheus]
