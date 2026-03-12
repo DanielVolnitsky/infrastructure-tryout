@@ -8,6 +8,10 @@ exporters:
     endpoint: 0.0.0.0:8889
     resource_to_telemetry_conversion:
       enabled: true
+  debug:
+    verbosity: detailed
+    sampling_initial: 5
+    sampling_thereafter: 200
 
 service:
   telemetry:
@@ -15,5 +19,5 @@ service:
       level: debug
   pipelines:
     metrics:
-      receivers: [otlp]
-      exporters: [prometheus]
+      receivers: [ otlp ]
+      exporters: [ prometheus, debug ]
