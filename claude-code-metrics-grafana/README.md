@@ -1,4 +1,4 @@
-# Claude Code Metrics — Prometheus & Grafana
+# Claude Code Metrics — VictoriaMetrics & Grafana
 
 Alternative to the AWS CloudWatch solution.
 
@@ -54,7 +54,7 @@ window (not cumulative).
 - `terminal.type` reflects the IDE/terminal Claude Code is running in (e.g. `pycharm`, `vscode`)
 - The same push also contains `claude_code.token.usage` (broken down by `input`/`output`/`cacheRead`/`cacheCreation`) and `claude_code.active_time.total` (
   broken down by `user`/`cli`)
-- Prometheus scrapes the collector every ~15 seconds, so the metric is served many more times than it is pushed
+- The OTel Collector converts delta metrics to cumulative counters via `deltatocumulative` and pushes each sample directly to VictoriaMetrics — one write per push, no scrape duplication
 
 ## Tear Down
 
