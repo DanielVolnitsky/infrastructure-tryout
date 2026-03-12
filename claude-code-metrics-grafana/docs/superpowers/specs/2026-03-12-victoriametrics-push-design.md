@@ -144,6 +144,6 @@ Delete this file — it is no longer referenced by any service.
 
 - `docker compose up -d` starts all three services (otel-collector, victoriametrics, grafana) with no errors.
 - OTel Collector logs confirm successful remote write delivery after metrics arrive.
-- After three successive pushes of `$0.010`, `$0.020`, `$0.030` for one session, the `Top 5 Session by Cost` bargauge shows `$0.060` for that session.
+- After N successive pushes for one session, the `Top 5 Session by Cost` bargauge shows a value equal to the sum of all N delta values for that session.
 - `Top 5 Users by Cost` and `Cost per User Comparison` include sessions that have had no pushes in the last 5+ minutes but pushed at least once within the selected dashboard time range.
 - `Cost Usage Over Time` shows non-zero bars for time buckets in which pushes occurred (not a flat line of the last delta value).
