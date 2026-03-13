@@ -25,11 +25,23 @@ open http://localhost:3000
 
 ## Services
 
-| Service        | Port | Purpose                             |
-|----------------|------|-------------------------------------|
-| OTel Collector | 4318 | Receives OTLP/HTTP from Claude Code |
+| Service         | Port | Purpose                               |
+|-----------------|------|---------------------------------------|
+| OTel Collector  | 4318 | Receives OTLP/HTTP from Claude Code   |
 | VictoriaMetrics | 8428 | Receives remote write, stores metrics |
-| Grafana        | 3000 | Dashboard (no login required)       |
+| Grafana         | 3000 | Dashboard (no login required)         |
+
+## Emitted Metrics
+
+Resource attributes are promoted to labels via `resource_to_telemetry_conversion` in the OTel Collector: `user.email`, `host.arch`, `os.type`, `os.version`,
+`service.name`, `service.version`.
+
+| Metric                          | Description         | Unit   | Data-point labels                                                                                              | Series per session |
+|---------------------------------|---------------------|--------|----------------------------------------------------------------------------------------------------------------|--------------------|
+| `claude_code.cost.usage`        | Cost of the session | USD    | `user.id`, `session.id`, `terminal.type`, `model`                                                              | 1                  |
+| `claude_code.token.usage`       | Token consumption   | tokens | `user.id`, `session.id`, `terminal.type`, `model`, `type` (`input` / `output` / `cacheRead` / `cacheCreation`) | 4                  |
+| `claude_code.active_time.total` | Active time         | s      | `user.id`, `session.id`, `terminal.type`, `type` (`user` / `cli`)                                              | 2                  |
+| `claude_code.session.count`     | Sessions started    | —      | `user.id`, `session.id`, `terminal.type`                                                                       | 1                  |
 
 ## Metric Push Behaviour
 
@@ -52,8 +64,8 @@ window (not cumulative).
 - `session.id` is stable for the lifetime of a Claude Code session
 - `user.id` is a hashed identifier; `user.email` is set by `client/install.py`
 - `terminal.type` reflects the IDE/terminal Claude Code is running in (e.g. `pycharm`, `vscode`)
-- The same push also contains `claude_code.token.usage` (broken down by `input`/`output`/`cacheRead`/`cacheCreation`) and `claude_code.active_time.total` (
-  broken down by `user`/`cli`)
+- `token.usage` fans out into 4 series per session (one per token `type`); `active_time.total` into 2 (one per activity `type`); neither `active_time.total` nor
+  `session.count` carry a `model` label
 - The OTel Collector converts delta metrics to cumulative counters via `deltatocumulative` and pushes each sample directly to VictoriaMetrics — one write per push, no scrape duplication
 
 ## Tear Down
