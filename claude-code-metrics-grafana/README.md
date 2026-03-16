@@ -4,9 +4,28 @@ Alternative to the AWS CloudWatch solution.
 
 ## Architecture
 
-```
-Claude Code (OTLP/HTTP JSON) → OTel Collector → VictoriaMetrics (remote write) → Grafana Dashboard
-```
+## Architecture Alternatives
+
+Three options were evaluated for combining real-time Claude Code operational metrics with daily business reporting alongside other AI usage data.
+
+### Option A — Separate tools, bridged daily ✅ chosen
+
+- **Grafana/VictoriaMetrics** handle real-time Claude Code ops monitoring (sub-minute latency, alerting)
+- A **daily k8s CronJob | Jenkins Job** reads the previous day's aggregates from VictoriaMetrics and writes dated Parquet files to S3
+- **QuickSight** consumes that S3 prefix via Athena alongside existing AI usage API data, enabling cross-service cost reconciliation
+- Each tool does what it is best at; no platform migration required
+
+### Option B — Consolidate in Grafana
+
+- Remove QuickSight; add the **Grafana Athena datasource plugin** to query existing S3/Athena data directly
+- Single platform for both real-time Claude Code metrics and historical AI usage
+- Trade-off: Grafana is less suited for business reporting (no pivot tables, limited ad-hoc exploration); per-scan Athena query costs
+
+### Option C — Dual-write to both systems
+
+- Extend the OTel Collector with a second exporter (**Firehose → S3**) so raw Claude Code data lands in both VictoriaMetrics and QuickSight natively
+- Most complex pipeline; two systems holding the same data with risk of metric divergence
+- Not chosen due to operational overhead and pipeline complexity
 
 ## Quick Start
 
