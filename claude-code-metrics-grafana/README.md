@@ -68,6 +68,52 @@ window (not cumulative).
   `session.count` carry a `model` label
 - The OTel Collector converts delta metrics to cumulative counters via `deltatocumulative` and pushes each sample directly to VictoriaMetrics — one write per push, no scrape duplication
 
+## Production Recommendations
+
+The default configuration is tuned for development. For production deployments (e.g., EKS), consider these additional changes:
+
+### Health Extension
+
+Add the `health_check` extension for Kubernetes liveness/readiness probes:
+
+```yaml
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+service:
+  extensions: [health_check]
+```
+
+This exposes a health endpoint at `:13133/` that returns `200 OK` when the collector is ready.
+
+### Log Verbosity
+
+Change `service.telemetry.logs.level` from `debug` to `info` and remove the `debug` exporter to reduce log volume and CPU overhead:
+
+```yaml
+service:
+  telemetry:
+    logs:
+      level: info
+  pipelines:
+    metrics:
+      exporters: [prometheusremotewrite]   # remove 'debug'
+```
+
+### `max_stale` Tuning
+
+The `deltatocumulative` processor evicts in-memory state for series not seen within `max_stale`. After eviction, the cumulative counter resets — `increase()` handles this correctly, but `last_over_time()` queries will undercount.
+
+| `max_stale` | Memory (200 users) | Idle tolerance | Risk                                              |
+|-------------|--------------------|-----------------|-------------------------------------------------|
+| 30m         | ~Low               | 30 min gaps     | Resets after short breaks; `last_over_time` undercounts |
+| 2h          | ~Moderate          | 2h gaps         | Covers lunch breaks, most meetings              |
+| 6h          | ~Higher            | Half-day gaps   | Covers long focus blocks away from Claude Code  |
+| 24h (default) | ~Highest (~tens of MB) | Full workday | Only resets after overnight                     |
+
+Memory impact per session is small (a few KB of counter state), so even 200 users × 24h is ~tens of MB.
+
 ## Tear Down
 
 ```bash

@@ -5,8 +5,19 @@ receivers:
         endpoint: 0.0.0.0:4318
 
 processors:
+  # Prevents OOM by applying backpressure to the receiver when memory usage
+  # exceeds (limit_mib - spike_limit_mib) = 300 MiB. Must be first in the pipeline.
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 400
+    spike_limit_mib: 100
   deltatocumulative:
-    max_stale: 30m
+    max_stale: 24h
+  # Groups data points into fewer, larger remote-write requests.
+  # Flushes every 5s or when 1024 points accumulate (whichever comes first).
+  batch:
+    send_batch_size: 1024
+    timeout: 5s
 
 exporters:
   prometheusremotewrite:
@@ -14,6 +25,11 @@ exporters:
     send_metadata: true
     resource_to_telemetry_conversion:
       enabled: true
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
   debug:
     verbosity: detailed
     sampling_initial: 5
@@ -26,5 +42,5 @@ service:
   pipelines:
     metrics:
       receivers: [otlp]
-      processors: [deltatocumulative]
+      processors: [memory_limiter, deltatocumulative, batch]
       exporters: [prometheusremotewrite, debug]
