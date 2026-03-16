@@ -114,7 +114,8 @@ window (not cumulative).
 - `terminal.type` reflects the IDE/terminal Claude Code is running in (e.g. `pycharm`, `vscode`)
 - `token.usage` fans out into 4 series per session (one per token `type`); `active_time.total` into 2 (one per activity `type`); neither `active_time.total` nor
   `session.count` carry a `model` label
-- The OTel Collector converts delta metrics to cumulative counters via `deltatocumulative` and pushes each sample directly to VictoriaMetrics — one write per push, no scrape duplication
+- The OTel Collector converts delta metrics to cumulative counters via `deltatocumulative` and pushes each sample directly to VictoriaMetrics — one write per
+  push, no scrape duplication
 
 ## Production Recommendations
 
@@ -130,7 +131,7 @@ extensions:
     endpoint: 0.0.0.0:13133
 
 service:
-  extensions: [health_check]
+  extensions: [ health_check ]
 ```
 
 This exposes a health endpoint at `:13133/` that returns `200 OK` when the collector is ready.
@@ -146,19 +147,20 @@ service:
       level: info
   pipelines:
     metrics:
-      exporters: [prometheusremotewrite]   # remove 'debug'
+      exporters: [ prometheusremotewrite ]   # remove 'debug'
 ```
 
 ### `max_stale` Tuning
 
-The `deltatocumulative` processor evicts in-memory state for series not seen within `max_stale`. After eviction, the cumulative counter resets — `increase()` handles this correctly, but `last_over_time()` queries will undercount.
+The `deltatocumulative` processor evicts in-memory state for series not seen within `max_stale`. After eviction, the cumulative counter resets — `increase()`
+handles this correctly, but `last_over_time()` queries will undercount.
 
-| `max_stale` | Memory (200 users) | Idle tolerance | Risk                                              |
-|-------------|--------------------|-----------------|-------------------------------------------------|
-| 30m         | ~Low               | 30 min gaps     | Resets after short breaks; `last_over_time` undercounts |
-| 2h          | ~Moderate          | 2h gaps         | Covers lunch breaks, most meetings              |
-| 6h          | ~Higher            | Half-day gaps   | Covers long focus blocks away from Claude Code  |
-| 24h (default) | ~Highest (~tens of MB) | Full workday | Only resets after overnight                     |
+| `max_stale`   | Memory (200 users)     | Idle tolerance | Risk                                                    |
+|---------------|------------------------|----------------|---------------------------------------------------------|
+| 30m           | ~Low                   | 30 min gaps    | Resets after short breaks; `last_over_time` undercounts |
+| 2h            | ~Moderate              | 2h gaps        | Covers lunch breaks, most meetings                      |
+| 6h            | ~Higher                | Half-day gaps  | Covers long focus blocks away from Claude Code          |
+| 24h (default) | ~Highest (~tens of MB) | Full workday   | Only resets after overnight                             |
 
 Memory impact per session is small (a few KB of counter state), so even 200 users × 24h is ~tens of MB.
 
